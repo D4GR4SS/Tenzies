@@ -1,11 +1,23 @@
 import { useState, useEffect } from 'react';
-import Die from './Die';
+import Die from './components/Die';
+import Score from './components/Score';
+import Time from './components/Time';
 import { nanoid } from 'nanoid';
 import Confetti from 'react-confetti';
 
 export default function App() {
   const [dice, setDice] = useState(allNewDice());
   const [tenzies, setTenzies] = useState(false);
+  const [score, setScore] = useState(0);
+  const [recordScore, setRecordScore] = useState(
+    JSON.parse(localStorage.getItem('best-score')) || 0
+  );
+
+  function setRecords() {
+    if (!recordScore || score < recordScore) {
+      setRecordScore(score);
+    }
+  }
 
   useEffect(() => {
     const allHeld = dice.every((die) => die.isHeld);
@@ -13,8 +25,15 @@ export default function App() {
     const allSameValue = dice.every((die) => die.value === firstValue);
     if (allHeld && allSameValue) {
       setTenzies(true);
+      setRecords();
     }
   }, [dice]);
+
+  //useEffect(() => {}, []);
+
+  useEffect(() => {
+    localStorage.setItem('best-score', JSON.stringify(recordScore));
+  }, [recordScore]);
 
   function generateNewDie() {
     return {
@@ -39,9 +58,11 @@ export default function App() {
           return die.isHeld ? die : generateNewDie();
         })
       );
+      setScore((count) => count + 1);
     } else {
       setTenzies(false);
       setDice(allNewDice());
+      setScore(0);
     }
   }
 
@@ -66,14 +87,22 @@ export default function App() {
     <main>
       {tenzies && <Confetti />}
       <h1 className='title'>Tenzies</h1>
+
       <p className='instructions'>
         Roll until all dice are the same. Click each die to freeze it at its
         current value between rolls.
       </p>
+
       <div className='dice-container'>{diceElements}</div>
+
       <button className='roll-dice' onClick={rollDice}>
         {tenzies ? 'New Game' : 'Roll'}
       </button>
+
+      <section className='track-container'>
+        <Score score={score} recordScore={recordScore} />
+        <Time />
+      </section>
     </main>
   );
 }
