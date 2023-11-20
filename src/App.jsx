@@ -8,6 +8,7 @@ import Confetti from 'react-confetti';
 export default function App() {
   const [dice, setDice] = useState(allNewDice());
   const [tenzies, setTenzies] = useState(false);
+
   const [score, setScore] = useState(0);
   const [recordScore, setRecordScore] = useState(
     JSON.parse(localStorage.getItem('best-score')) || 0
@@ -18,12 +19,6 @@ export default function App() {
   const [elapsedTime, setElapsedTime] = useState(
     JSON.parse(localStorage.getItem('best-time')) || null
   );
-
-  function setBestScore() {
-    if (!recordScore || score < recordScore) {
-      setRecordScore(score);
-    }
-  }
 
   useEffect(() => {
     setStartTime(Date.now());
@@ -67,6 +62,12 @@ export default function App() {
     };
   }
 
+  function setBestScore() {
+    if (!recordScore || score < recordScore) {
+      setRecordScore(score);
+    }
+  }
+
   function allNewDice() {
     const newDice = [];
     for (let i = 0; i < 10; i++) {
@@ -96,12 +97,12 @@ export default function App() {
     );
   }
 
-  const resetGame = () => {
+  function resetGame() {
     setTenzies(false);
     setDice(allNewDice());
     setScore(0);
     setStartTime(new Date());
-  };
+  }
 
   const diceElements = dice.map((die) => (
     <Die
