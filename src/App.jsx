@@ -13,11 +13,21 @@ export default function App() {
     JSON.parse(localStorage.getItem('best-score')) || 0
   );
 
-  function setRecords() {
+  const [startTime, setStartTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(
+    JSON.parse(localStorage.getItem('best-time')) || null
+  );
+
+  function setBestScore() {
     if (!recordScore || score < recordScore) {
       setRecordScore(score);
     }
   }
+
+  useEffect(() => {
+    setStartTime(Date.now());
+  }, []);
 
   useEffect(() => {
     const allHeld = dice.every((die) => die.isHeld);
@@ -25,11 +35,25 @@ export default function App() {
     const allSameValue = dice.every((die) => die.value === firstValue);
     if (allHeld && allSameValue) {
       setTenzies(true);
-      setRecords();
+      setBestScore();
+      setEndTime(new Date());
     }
   }, [dice]);
 
-  //useEffect(() => {}, []);
+  useEffect(() => {
+    if (tenzies && startTime && endTime) {
+      const elapsedMilliseconds = endTime - startTime;
+
+      // Verifica se il tempo è inferiore al record corrente prima di aggiornare il record
+      if (!elapsedTime || elapsedMilliseconds < elapsedTime) {
+        setElapsedTime(elapsedMilliseconds);
+        localStorage.setItem('best-time', JSON.stringify(elapsedMilliseconds));
+      }
+
+      setElapsedTime(elapsedMilliseconds);
+      console.log(`You won! It took ${elapsedMilliseconds} milliseconds.`);
+    }
+  }, [tenzies, startTime, endTime, elapsedTime]);
 
   useEffect(() => {
     localStorage.setItem('best-score', JSON.stringify(recordScore));
@@ -60,9 +84,7 @@ export default function App() {
       );
       setScore((count) => count + 1);
     } else {
-      setTenzies(false);
-      setDice(allNewDice());
-      setScore(0);
+      resetGame();
     }
   }
 
@@ -73,6 +95,13 @@ export default function App() {
       })
     );
   }
+
+  const resetGame = () => {
+    setTenzies(false);
+    setDice(allNewDice());
+    setScore(0);
+    setStartTime(new Date());
+  };
 
   const diceElements = dice.map((die) => (
     <Die
@@ -101,7 +130,12 @@ export default function App() {
 
       <section className='track-container'>
         <Score score={score} recordScore={recordScore} />
-        <Time />
+        <Time
+          tenzies={tenzies}
+          elapsedTime={elapsedTime}
+          startTime={startTime}
+          onTimeUpdate={(updatedTime) => setElapsedTime(updatedTime)}
+        />
       </section>
     </main>
   );
